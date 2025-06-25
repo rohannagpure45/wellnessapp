@@ -3,16 +3,25 @@ package com.example.mobileapplicationdevelopment2025.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobileapplicationdevelopment2025.repository.FoodRepository
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.stateIn
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class FoodViewModel(
+@HiltViewModel
+class FoodViewModel @Inject constructor(
     private val repo: FoodRepository
 ) : ViewModel() {
 
-    val food = repo.observeFood()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    private val _foods =
+        MutableStateFlow<List<com.example.mobileapplicationdevelopment2025.data.remote.model.FoodDto>>(
+            emptyList()
+        )
+    val foods: StateFlow<List<com.example.mobileapplicationdevelopment2025.data.remote.model.FoodDto>> =
+        _foods
 
-    init { viewModelScope.launch { repo.ensureSeeded() } }
+    fun search(q: String) = viewModelScope.launch {
+        _foods.value = repo.search(q)
+    }
 }

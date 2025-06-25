@@ -1,20 +1,32 @@
 package com.example.mobileapplicationdevelopment2025.data.remote.repository
 
+import com.example.mobileapplicationdevelopment2025.data.local.EquipmentDao
 import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
 import com.example.mobileapplicationdevelopment2025.data.remote.model.EquipmentDto
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class EquipmentRepository @Inject constructor(
-    private val api: EquipmentApi
+    private val api: EquipmentApi,
+    private val dao: EquipmentDao
 ) {
 
-    suspend fun getEquipmentList(query: String? = null): List<EquipmentDto> =
-        withContext(Dispatchers.IO) { api.fetchEquipment(query) }
+    /** Network → DB (one-shot). Call from WorkManager or ViewModel. */
+    suspend fun refresh() {
+        val networkList = api.fetchEquipment()
+        dao.upsert(networkList.map(EquipmentDto::toEntity))
+    }
 
-    suspend fun getEquipmentById(id: String): EquipmentDto =
-        withContext(Dispatchers.IO) { api.fetchEquipmentDetail(id) }
+    /** Stream of cached items for Compose. */
+    fun getAll(): Flow<List<EquipmentDto>> =
+        dao.observeAll().map { list -> list.map { it.toDto() } }
+
+    /** Detail (offline-first). */
+    suspend fun getDetail(id: Int): EquipmentDto =
+        dao.get(id)?.toDto() ?: api.fetchEquipmentDetail(id).also {
+            dao.upsert(listOf(it.toEntity()))
+        }
 }

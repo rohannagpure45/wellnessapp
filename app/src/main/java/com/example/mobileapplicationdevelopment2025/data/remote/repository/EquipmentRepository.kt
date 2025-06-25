@@ -2,18 +2,18 @@ package com.example.mobileapplicationdevelopment2025.data.remote.repository
 
 import com.example.mobileapplicationdevelopment2025.data.local.EquipmentDao
 import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
+import com.example.mobileapplicationdevelopment2025.data.remote.model.EquipmentDto
 import javax.inject.Inject
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import javax.inject.Singleton
 
+@Singleton
 class EquipmentRepository @Inject constructor(
     private val api: EquipmentApi,
     private val dao: EquipmentDao
 ) {
-    fun equipments(): Flow<List<EquipmentDto>> = dao.observeAll().map { it.map(::toDto) }
+    suspend fun getAll(): List<EquipmentDto> =
+        api.fetchEquipment().also { dao.upsert(it.map(EquipmentDto::toEntity)) }
 
-    suspend fun refresh() {
-        val remote = api.fetchEquipment()
-        dao.upsertAll(remote.map(::toEntity))
-    }
+    suspend fun getDetail(id: Int): EquipmentDto =
+        dao.get(id)?.toDto() ?: api.fetchEquipmentDetail(id)
 }

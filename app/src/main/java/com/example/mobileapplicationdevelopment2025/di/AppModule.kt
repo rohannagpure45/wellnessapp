@@ -2,65 +2,50 @@ package com.example.mobileapplicationdevelopment2025.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.mobileapplicationdevelopment2025.BuildConfig
 import com.example.mobileapplicationdevelopment2025.data.local.AppDatabase
-import com.example.mobileapplicationdevelopment2025.data.local.FoodDao
-import com.example.mobileapplicationdevelopment2025.data.remote.BASE_URL
-import com.example.mobileapplicationdevelopment2025.data.remote.CalorieApiService
-import com.example.mobileapplicationdevelopment2025.repository.FoodRepository
+import com.example.mobileapplicationdevelopment2025.data.local.EquipmentDao
+import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
+import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
-import okhttp3.OkHttpClient
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Singleton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Singleton
+
+private const val BASE_URL = "https://api.example.com/"
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    @Provides
-    @Singleton
-    fun provideOkHttpClient(): OkHttpClient =
-        OkHttpClient.Builder()
-            .addInterceptor { chain ->
-                val request = chain.request()
-                    .newBuilder()
-                    .addHeader("X-Api-Key", BuildConfig.CALORIE_API_KEY)
-                    .build()
-                chain.proceed(request)
-            }
-            .build()
-
-    @Provides
-    @Singleton
-    fun provideRetrofit(client: OkHttpClient): Retrofit =
+    @Provides @Singleton
+    fun provideRetrofit(): Retrofit =
         Retrofit.Builder()
             .baseUrl(BASE_URL)
-            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-    @Provides
-    @Singleton
-    fun provideCalorieApi(retrofit: Retrofit): CalorieApiService =
-        retrofit.create(CalorieApiService::class.java)
+    @Provides @Singleton
+    fun provideEquipmentApi(retrofit: Retrofit): EquipmentApi =
+        retrofit.create(EquipmentApi::class.java)
+
+    @Provides @Singleton
+    fun provideDatabase(
+        @ApplicationContext context: Context
+    ): AppDatabase =
+        Room.databaseBuilder(context, AppDatabase::class.java, "wellness.db")
+            .fallbackToDestructiveMigration()
+            .build()
 
     @Provides
-    @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, "food.db").build()
+    fun provideEquipmentDao(db: AppDatabase): EquipmentDao = db.equipmentDao()
 
-    @Provides
-    fun provideFoodDao(db: AppDatabase): FoodDao = db.foodDao()
-
-    @Provides
-    @Singleton
-    fun provideFoodRepository(
-        api: CalorieApiService,
-        dao: FoodDao
-    ): FoodRepository = FoodRepository(api, dao)
+    @Provides @Singleton
+    fun provideEquipmentRepository(
+        api: EquipmentApi,
+        dao: EquipmentDao
+    ): EquipmentRepository = EquipmentRepository(api, dao)
 }

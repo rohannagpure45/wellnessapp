@@ -3,13 +3,15 @@ package com.example.mobileapplicationdevelopment2025.ui
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.mobileapplicationdevelopment2025.ui.components.ItemCard
 
 @Composable
 fun EquipmentScreen(
-    vm: EquipmentViewModel = hiltViewModel()
+    navController: NavHostController,
+    viewModel: EquipmentViewModel = hiltViewModel()
 ) {
-    val list by vm.equipment.collectAsState()
+    val list by viewModel.uiState.collectAsState()
 
     LazyColumn {
         items(list) { item ->
