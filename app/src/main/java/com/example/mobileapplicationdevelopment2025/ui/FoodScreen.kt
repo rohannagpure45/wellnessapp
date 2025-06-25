@@ -1,33 +1,41 @@
 package com.example.mobileapplicationdevelopment2025.ui
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
+import dagger.hilt.android.lifecycle.HiltViewModel
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController
+import com.example.mobileapplicationdevelopment2025.ui.components.ItemCard
 import com.example.mobileapplicationdevelopment2025.viewmodel.FoodViewModel
 
+
 @Composable
-fun FoodScreen(navController: NavHostController, viewModel: FoodViewModel = hiltViewModel())  {
-    var query by remember { mutableStateOf("") }
+fun FoodScreen(
+    viewModel: FoodViewModel = hiltViewModel()
+) {
+    val foodList by viewModel.foods.collectAsState()
 
-    Column(Modifier.fillMaxSize().padding(16.dp)) {
-        OutlinedTextField(
-            value = query,
-            onValueChange = { query = it },
-            label = { Text("Search food") }
+    if (foodList.isEmpty()) {
+        Text(
+            text = "No food items. Pull-to-refresh or try a new search.",
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.fillMaxSize()
         )
-        Spacer(Modifier.height(8.dp))
-        Button(onClick = { viewModel.search(query) }) { Text("Go") }
-
-        val list by viewModel.foods.collectAsState()
-        LazyColumn {
-            items(list) { item ->
-                Text(item.name, style = MaterialTheme.typography.bodyLarge)
+    } else {
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(foodList) { food ->
+                ItemCard(
+                    imageUrl    = food.imageUrl,
+                    title       = food.name,
+                    subtitle    = "${food.calories} kcal",
+                    description = ""
+                )
             }
         }
     }
