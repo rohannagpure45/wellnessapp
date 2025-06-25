@@ -6,7 +6,10 @@ data class EquipmentDto(
     val id: String,
     val name: String,
     val imageUrl: String,
-    val description: String,
-    ) {
-    fun toEntity() = EquipmentEntity(id, name, imageUrl, description)
+    val category: String,
+    val description: String
+) {
+    fun toEntity(): EquipmentEntity {
+        return EquipmentEntity(id, name, imageUrl, category, description)
+    }
 }

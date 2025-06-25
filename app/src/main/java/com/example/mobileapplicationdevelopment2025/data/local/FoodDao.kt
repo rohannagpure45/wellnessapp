@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import kotlinx.coroutines.flow.Flow
 import androidx.room.Transaction
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface FoodDao {
@@ -15,12 +15,12 @@ interface FoodDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertAll(list: List<FoodEntity>)
 
+    @Query("DELETE FROM food")
+    suspend fun clearTable()
+
     @Transaction
     suspend fun replaceAll(list: List<FoodEntity>) {
         clearTable()
         upsertAll(list)
     }
-
-    @Query("DELETE FROM food")
-    suspend fun clearTable()
 }

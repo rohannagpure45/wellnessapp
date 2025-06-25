@@ -14,42 +14,33 @@ class FoodRepository @Inject constructor(
     private val api: FoodApiService,
     private val dao: FoodDao
 ) {
-
-
-    val foods: Flow<List<FoodDto>> =
-        dao.getAll()
-            .map { list -> list.map(FoodEntity::toDto) }
-
+    val foods: Flow<List<FoodDto>> = dao.getAll().map { entities ->
+        entities.map { it.toDto() }
+    }
 
     suspend fun search(query: String): List<FoodDto> {
-        val response = api.searchFood(query)
-        if (!response.isSuccessful) {
-            throw RuntimeException("HTTP ${response.code()} ${response.message()}")
+        val result = api.searchFood(query)
+        if (!result.isSuccessful) {
+            throw RuntimeException("HTTP ${result.code()} ${result.message()}")
         }
-
-        val items = response.body().orEmpty()
-        dao.replaceAll(items.map(FoodDto::toEntity))
-        return items
+        val body: List<FoodDto> = result.body().orEmpty()
+        dao.replaceAll(body.map { it.toEntity() })
+        return body
     }
 
     suspend fun refresh() {
-        val response = api.getAllFood()
-        if (response.isSuccessful) {
-            dao.replaceAll(response.body().orEmpty().map(FoodDto::toEntity))
+        val result = api.getAllFood()
+        if (result.isSuccessful) {
+            val fullList: List<FoodDto> = result.body().orEmpty()
+            dao.replaceAll(fullList.map { it.toEntity() })
         }
     }
 }
 
+private fun FoodEntity.toDto(): FoodDto {
+    return FoodDto(id, name, imageUrl, calories, serving_size_g, protein_g, fat_total_g, carbohydrates_total_g)
+}
 
-
-private fun FoodEntity.toDto() = FoodDto(
-    name     = name,
-    calories = calories
-)
-
-
-private fun FoodDto.toEntity() = FoodEntity(
-    name     = name,
-    calories = calories,
-    image    = ""
-)
+private fun FoodDto.toEntity(): FoodEntity {
+    return FoodEntity(id, name, imageUrl, calories, serving_size_g, protein_g, fat_total_g, carbohydrates_total_g)
+}

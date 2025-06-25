@@ -5,30 +5,24 @@ import androidx.lifecycle.viewModelScope
 import com.example.mobileapplicationdevelopment2025.data.remote.model.FoodDto
 import com.example.mobileapplicationdevelopment2025.data.remote.repository.FoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * ViewModel that exposes the food catalogue to the UI and lets the user search it.
- *
- * - Uses Hilt for DI (annotate with **@HiltViewModel**, *not* @Singleton).
- * - Exposes the repository’s Flow directly; Compose screens can
- *   `collectAsState()` on it.
- */
 @HiltViewModel
 class FoodViewModel @Inject constructor(
-    private val repository: FoodRepository
+    private val repo: FoodRepository
 ) : ViewModel() {
 
-    val foods: Flow<List<FoodDto>> = repository.foods
+    private val _foods = MutableStateFlow<List<FoodDto>>(emptyList())
+    val foods: StateFlow<List<FoodDto>> = _foods
 
-    fun search(query: String) = viewModelScope.launch {
-        repository.search(query)
-
+    fun search(q: String) = viewModelScope.launch {
+        _foods.value = repo.search(q)
     }
 
     fun refresh() = viewModelScope.launch {
-        repository.refresh()
+        repo.refresh()
     }
 }
