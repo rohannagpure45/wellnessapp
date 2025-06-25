@@ -1,0 +1,6 @@
+<resources>
+    <style name="Theme.MobileApplicationDevelopment2025"
+        parent="Theme.Material3.DayNight">
+        <item name="android:windowSplashScreenBackground">@color/md_theme_light_primary</item>
+    </style>
+</resources>

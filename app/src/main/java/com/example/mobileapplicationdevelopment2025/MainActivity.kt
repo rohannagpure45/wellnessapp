@@ -9,35 +9,38 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
+import androidx.navigation.compose.rememberNavController
+import androidx.work.*
+import com.example.mobileapplicationdevelopment2025.ui.components.BottomBar
+import com.example.mobileapplicationdevelopment2025.ui.*
+import com.example.mobileapplicationdevelopment2025.work.RefreshDataWorker
 import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.UNMETERED)
             .setRequiresBatteryNotLow(true)
             .build()
-        val refreshRequest = PeriodicWorkRequestBuilder<RefreshDataWorker>(1, TimeUnit.DAYS)
-            .setConstraints(constraints)
-            .build()
+
+        val refreshRequest =
+            PeriodicWorkRequestBuilder<RefreshDataWorker>(1, TimeUnit.DAYS)
+                .setConstraints(constraints)
+                .build()
+
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "RefreshDataWork",
             ExistingPeriodicWorkPolicy.KEEP,
             refreshRequest
         )
-        // Set up UI content with Jetpack Compose and Navigation
+
         setContent {
             val navController = rememberNavController()
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route
+            val backStackEntry by navController.currentBackStackEntryAsState()
+            val currentRoute = backStackEntry?.destination?.route
             Scaffold(
                 bottomBar = {
                     if (currentRoute in listOf("food", "equipment", "profile")) {
@@ -45,16 +48,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             ) { innerPadding ->
-                NavHost(navController, startDestination = "login", modifier = Modifier.padding(innerPadding)) {
-                    composable("login") { LoginScreen(navController) }
-                    composable("food") { FoodScreen(navController) }
-                    composable("equipment") { EquipmentScreen(navController) }
-                    composable("profile") { ProfileScreen(navController) }
+                NavHost(
+                    navController,
+                    startDestination = "login",
+                    modifier = Modifier.padding(innerPadding)
+                ) {
+                    composable("login")       { LoginScreen(navController) }
+                    composable("food")        { FoodScreen(navController) }
+                    composable("equipment")   { EquipmentScreen(navController) }
+                    composable("profile")     { ProfileScreen(navController) }
                     composable("detail") {
-                        val item = navController.previousBackStackEntry
+                        navController.previousBackStackEntry
                             ?.savedStateHandle
-                            ?.get<WellnessItem>("item")
-                        item?.let { DetailScreen(item = it) }
+                            ?.get<com.example.mobileapplicationdevelopment2025.data.WellnessItem>("item")
+                            ?.let { DetailScreen(it) }
                     }
                 }
             }
