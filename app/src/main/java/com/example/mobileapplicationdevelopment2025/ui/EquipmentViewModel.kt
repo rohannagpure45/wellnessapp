@@ -23,5 +23,9 @@ class EquipmentViewModel @Inject constructor(
         .getAll()
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
+    val uiState = repository.equipments
+
+
+
     fun refresh() = viewModelScope.launch { repository.refresh() }
 }

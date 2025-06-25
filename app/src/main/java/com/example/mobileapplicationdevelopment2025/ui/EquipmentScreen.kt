@@ -21,6 +21,7 @@ fun EquipmentScreen(
                 subtitle   = item.category,
                 description = item.description
             )
+            ItemCard(imageUrl = item.imageUrl, title = item.name, subtitle   = "", description = item.description )
         }
     }
 }

@@ -13,23 +13,18 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Singleton
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+import com.example.mobileapplicationdevelopment2025.data.local.FoodDao
 private const val BASE_URL = "https://api.example.com/"
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
-
-    @Provides @Singleton
-    fun provideRetrofit(): Retrofit =
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-
     @Provides @Singleton
     fun provideEquipmentApi(retrofit: Retrofit): EquipmentApi =
         retrofit.create(EquipmentApi::class.java)
+
+
+
 
     @Provides @Singleton
     fun provideDatabase(
@@ -42,9 +37,6 @@ object AppModule {
     @Provides
     fun provideEquipmentDao(db: AppDatabase): EquipmentDao = db.equipmentDao()
 
-    @Provides @Singleton
-    fun provideEquipmentRepository(
-        api: EquipmentApi,
-        dao: EquipmentDao
-    ): EquipmentRepository = EquipmentRepository(api, dao)
+    @Provides
+    fun provideFoodDao(db: AppDatabase): FoodDao = db.foodDao()
 }

@@ -34,6 +34,11 @@ class EquipmentRepository @Inject constructor(
 
     suspend fun getDetail(id: Int): EquipmentDto =
         dao.get(id)?.toDto() ?: api.fetchEquipmentDetail(id)
+
+    suspend fun refresh() {
+        val items = api.fetchEquipment()
+        dao.upsert( items.map(EquipmentDto::toEntity) )
+    }
 }
 
 
