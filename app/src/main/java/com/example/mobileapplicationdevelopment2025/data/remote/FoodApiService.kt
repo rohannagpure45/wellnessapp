@@ -5,12 +5,14 @@ import com.example.mobileapplicationdevelopment2025.data.remote.model.CalorieRes
 import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.Query
+import retrofit2.Response
 
 interface FoodApiService {
+    @GET("food/search")
+    suspend fun searchFood(
+        @Query("q") query: String
+    ): Response<List<FoodDto>>
 
-    @GET("nutrition")
-    suspend fun getFood(
-        @Header("X-Api-Key") apiKey: String = BuildConfig.CALORIE_API_KEY,
-        @Query("query") query: String
-    ): CalorieResponse
+    @GET("food/all")
+    suspend fun getAllFood(): Response<List<FoodDto>>
 }

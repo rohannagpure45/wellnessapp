@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface EquipmentDao {
-    @Query("SELECT * FROM equipment ORDER BY name")
-    fun observeAll(): Flow<List<EquipmentEntity>>
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun upsertAll(list: List<EquipmentEntity>)
+    suspend fun upsert(entity: EquipmentEntity)
+
+    @Query("SELECT * FROM equipment")
+    fun getAll(): Flow<List<EquipmentEntity>>
 }

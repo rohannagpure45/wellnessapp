@@ -5,7 +5,6 @@ import androidx.room.Room
 import com.example.mobileapplicationdevelopment2025.data.local.AppDatabase
 import com.example.mobileapplicationdevelopment2025.data.local.EquipmentDao
 import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
-import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

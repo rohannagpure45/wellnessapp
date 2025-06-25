@@ -13,6 +13,11 @@ import kotlinx.coroutines.launch
 class EquipmentViewModel @Inject constructor(
     private val repository: EquipmentRepository
 ) : ViewModel() {
+    init {
+        viewModelScope.launch {
+            repository.refresh()
+        }
+    }
 
     val uiState = repository
         .getAll()
