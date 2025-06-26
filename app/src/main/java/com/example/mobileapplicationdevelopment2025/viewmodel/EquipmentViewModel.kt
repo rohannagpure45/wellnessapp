@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import com.example.mobileapplicationdevelopment2025.data.remote.model.EquipmentDto
 import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
 import com.example.mobileapplicationdevelopment2025.session.SessionManager
+import com.example.mobileapplicationdevelopment2025.session.AddedEquipmentItem
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
@@ -28,6 +29,9 @@ class EquipmentViewModel @Inject constructor(
     // Current exercise time settings
     val exerciseTimeMinutes: StateFlow<Int> = sessionManager.exerciseTimeMinutes
     val exerciseTimeMultiplier: StateFlow<Float> = sessionManager.exerciseTimeMultiplier
+    
+    // Track added equipment items for removal
+    val addedEquipmentItems: StateFlow<List<AddedEquipmentItem>> = sessionManager.addedEquipmentItems
 
     init {
         viewModelScope.launch {
@@ -40,9 +44,22 @@ class EquipmentViewModel @Inject constructor(
             // Calculate actual calories burned based on exercise time
             val multiplier = sessionManager.exerciseTimeMultiplier.value
             val actualCaloriesBurned = (item.caloriesBurnedPerHour * multiplier).roundToInt()
+            val currentExerciseMinutes = sessionManager.exerciseTimeMinutes.value
             
             sessionManager.addBurned(actualCaloriesBurned)
+            sessionManager.addEquipmentItem(
+                name = item.name,
+                caloriesBurned = actualCaloriesBurned,
+                imageUrl = item.imageUrl,
+                exerciseMinutes = currentExerciseMinutes
+            )
             _burned.value += actualCaloriesBurned
         }
+    }
+    
+    fun removeEquipment(itemId: String) {
+        sessionManager.removeEquipmentItem(itemId)
+        // Update local total to match session manager
+        _burned.value = sessionManager.burned.value
     }
 }
