@@ -6,7 +6,6 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
-import dagger.hilt.work.HiltWorker
 import com.example.mobileapplicationdevelopment2025.data.WellnessDatabase
 import com.example.mobileapplicationdevelopment2025.network.WellnessApi
 import com.example.mobileapplicationdevelopment2025.repository.WellnessRepository
