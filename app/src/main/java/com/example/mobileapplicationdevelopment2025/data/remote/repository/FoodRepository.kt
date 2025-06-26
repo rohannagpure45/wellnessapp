@@ -12,26 +12,18 @@ class FoodRepository @Inject constructor(
     private val api: FoodApiService,
     private val dao: FoodDao
 ) {
-
-    suspend fun search(query: String): List<FoodDto> {
-        return try {
-            val res = api.searchFood(query)
-            if (!res.isSuccessful) emptyList()
-            else {
-                val list = res.body()?.items.orEmpty()
-                dao.replaceAll(list.map { it.toEntity() })
-                list
-            }
-        } catch (_: Exception) {
-            emptyList()
-        }
+    suspend fun search(query: String): List<FoodDto> = try {
+        val res = api.searchFood(query)
+        val list = res.body()?.items.orEmpty()
+        dao.replaceAll(list.map { it.toEntity() })
+        list
+    } catch (_: Exception) {
+        emptyList()
     }
 }
 
-private fun FoodDto.toEntity(): FoodEntity =
-    FoodEntity(
-        name     = name,
-        calories = calories,
-        img      = "https://picsum.photos/seed/${name.hashCode()}/100/100"
-    )
-
+private fun FoodDto.toEntity() = FoodEntity(
+    name     = name,
+    calories = calories,
+    img      = "https://source.unsplash.com/100x100/?$name"
+)

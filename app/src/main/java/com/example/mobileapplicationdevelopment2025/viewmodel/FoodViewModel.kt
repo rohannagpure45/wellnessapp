@@ -2,57 +2,43 @@ package com.example.mobileapplicationdevelopment2025.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mobileapplicationdevelopment2025.data.CalorieTracker
 import com.example.mobileapplicationdevelopment2025.data.remote.model.FoodDto
 import com.example.mobileapplicationdevelopment2025.data.remote.repository.FoodRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.random.Random
-
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 
 @HiltViewModel
 class FoodViewModel @Inject constructor(
     private val repo: FoodRepository
 ) : ViewModel() {
 
-    private val _list = MutableStateFlow<List<FoodDto>>(emptyList())
-    val list: StateFlow<List<FoodDto>> = _list
+    private val _foods = MutableStateFlow<List<FoodDto>>(emptyList())
+    val foods: StateFlow<List<FoodDto>> = _foods
+    val totalKcal: StateFlow<Int> = foods
+        .map { it.sumOf { f -> f.calories.toInt() } }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    private val _added = MutableStateFlow<Map<String, Int>>(emptyMap())
-    val added: StateFlow<Map<String, Int>> = _added
 
-    val total: StateFlow<Double> = combine(_list, _added) { food, cart ->
-        cart.entries.sumOf { (n, q) ->
-            food.firstOrNull { it.name == n }?.calories?.times(q) ?: 0.0
-        }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, 0.0)
-
-    init { presets() }
-
-    private fun presets() = viewModelScope.launch {
-        _list.value = listOf("apple","egg","banana","bread","broccoli")
-            .flatMap { repo.search(it) }
-    }
-
-    fun search(q: String) = viewModelScope.launch {
-        val result = runCatching { repo.search(q) }.getOrDefault(emptyList())
-        if (result.isEmpty()) {
-            _list.value = listOf(FoodDto("apple",0.0,0.0,0.0,0.0,0.0))
-        } else {
-            _list.value = result
+    init {
+        viewModelScope.launch {
+            val presets = listOf("apple","egg","banana","bread","broccoli")
+            _foods.value = presets.flatMap { repo.search(it) }
         }
     }
-
-
-    fun add(item: FoodDto) {
-        _added.value = _added.value.toMutableMap().apply {
-            put(item.name, (get(item.name) ?: 0) + 1)
-        }
-        CalorieTracker.consumed.value += item.calories
+    private val defaults = listOf("apple","egg","banana","bread","broccoli")
+    init { load(defaults) }
+    fun refresh() = load(defaults)
+    private fun load(terms: List<String>) = viewModelScope.launch {
+        _foods.value = terms.flatMap { repo.search(it) }
     }
+    fun search(q: String) = load(listOf(q))
 
-    fun img(name: String): String =
-        "https://picsum.photos/seed/${name.hashCode()}/100/100"
+
+
 }

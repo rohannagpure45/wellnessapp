@@ -39,8 +39,8 @@ class MainActivity : ComponentActivity() {
                 )
                 .build()
 
-            WorkManager.getInstance(this)
-                .enqueueUniquePeriodicWork("refresh", ExistingPeriodicWorkPolicy.KEEP, req)
+          //  WorkManager.getInstance(this)
+              //  .enqueueUniquePeriodicWork("refresh", ExistingPeriodicWorkPolicy.KEEP, req)
             NavHost(
                 navController = rootNav,
                 startDestination = if (authed) "main" else "login"
