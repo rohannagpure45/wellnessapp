@@ -4,73 +4,83 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import com.example.mobileapplicationdevelopment2025.ui.*
-import com.example.mobileapplicationdevelopment2025.ui.components.BottomBar
-import com.example.mobileapplicationdevelopment2025.work.RefreshWorker
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.*
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-
+import com.example.mobileapplicationdevelopment2025.ui.FoodScreen
+import com.example.mobileapplicationdevelopment2025.ui.EquipmentScreen
+import com.example.mobileapplicationdevelopment2025.ui.ProfileScreen
+import com.example.mobileapplicationdevelopment2025.ui.SettingsScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContent {
-            var authed by remember { mutableStateOf(false) }
-            val rootNav = rememberNavController()
+        setContent { WellnessNavHost() }
+    }
+}
 
-            val req = PeriodicWorkRequestBuilder<RefreshWorker>(12, java.util.concurrent.TimeUnit.HOURS)
-                .setConstraints(
-                    Constraints.Builder()
-                        .setRequiredNetworkType(NetworkType.UNMETERED)
-                        .setRequiresBatteryNotLow(true)
-                        .build()
-                )
-                .build()
+sealed class Screen(val route: String, val icon: androidx.compose.ui.graphics.vector.ImageVector, val label: String) {
+    object Food : Screen("food", Icons.Filled.Restaurant, "Food")
+    object Equipment : Screen("equipment", Icons.Filled.FitnessCenter, "Equipment")
+    object Profile : Screen("profile", Icons.Filled.Person, "Profile")
+    object Settings : Screen("settings", Icons.Filled.Settings, "Settings")
+}
 
-          //  WorkManager.getInstance(this)
-              //  .enqueueUniquePeriodicWork("refresh", ExistingPeriodicWorkPolicy.KEEP, req)
-            NavHost(
-                navController = rootNav,
-                startDestination = if (authed) "main" else "login"
-            ) {
-                composable("login") {
-                    LoginScreen(
-                        onSuccess = { authed = true ; rootNav.navigate("main") { popUpTo("login") { inclusive = true } } }
+@Composable
+fun WellnessNavHost() {
+    val navController = rememberNavController()
+    Scaffold(
+        bottomBar = {
+            val currentRoute = navController
+                .currentBackStackEntryAsState().value?.destination?.route
+            NavigationBar {
+                listOf(
+                    Screen.Food,
+                    Screen.Equipment,
+                    Screen.Profile,
+                    Screen.Settings
+                ).forEach { screen ->
+                    NavigationBarItem(
+                        icon = { Icon(screen.icon, contentDescription = screen.label) },
+                        label = { Text(screen.label) },
+                        selected = currentRoute == screen.route,
+                        onClick = {
+                            navController.navigate(screen.route) {
+                                popUpTo(navController.graph.findStartDestination().id) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
                     )
                 }
-
-                composable("main") {
-                    val tabNav = rememberNavController()
-                    val showBar by derivedStateOf {
-                        tabNav.currentDestination?.route in listOf("food","equipment","profile")
-                    }
-                    Scaffold(
-                        bottomBar = { if (showBar) BottomBar(tabNav) }
-                    ) { inner ->
-                        NavHost(
-                            navController = tabNav,
-                            startDestination = "food",
-                            modifier = Modifier.padding(inner)
-                        ) {
-                            composable("food")      { FoodScreen() }
-                            composable("equipment") { EquipmentScreen() }
-                            composable("profile")   { ProfileScreen() }
-                        }
-                    }
-                }
             }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = Screen.Food.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(Screen.Food.route) { FoodScreen() }
+            composable(Screen.Equipment.route) { EquipmentScreen() }
+            composable(Screen.Profile.route) { ProfileScreen() }
+            composable(Screen.Settings.route) { SettingsScreen() }
         }
     }
 }

@@ -1,40 +1,28 @@
 package com.example.mobileapplicationdevelopment2025.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.mobileapplicationdevelopment2025.viewmodel.EquipmentViewModel
-import com.example.mobileapplicationdevelopment2025.viewmodel.FoodViewModel
+import com.example.mobileapplicationdevelopment2025.viewmodel.ProfileViewModel
 
 @Composable
 fun ProfileScreen(
-    foodVm: FoodViewModel = hiltViewModel(),
-    eqVm: EquipmentViewModel = hiltViewModel()
+    viewModel: ProfileViewModel = hiltViewModel()
 ) {
-    val consumed by foodVm.totalKcal.collectAsState()
-    val burned  by eqVm.totalBurn.collectAsState()
-    val net     = consumed - burned
-
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
-        ) {
-            Text("User Profile", style = MaterialTheme.typography.headlineMedium)
-            Spacer(Modifier.height(16.dp))
-            Text("Name: Rohan Nagpure")
-            Text("Email: nagpure.r@northeastern.edu")
-            Spacer(Modifier.height(24.dp))
-            Text("Consumed: $consumed kcal")
-            Text("Burned:   $burned kcal")
-            Text("Net:      $net kcal")
-        }
+    val consumed by viewModel.consumed.collectAsState(initial = 0)
+    val burned by viewModel.burned.collectAsState(initial = 0)
+    val net by viewModel.net.collectAsState(initial = 0)
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Text("Username: admin", style = MaterialTheme.typography.titleLarge)
+        Spacer(Modifier.height(4.dp))
+        Text("Consumed: $consumed kcal", style = MaterialTheme.typography.bodyMedium)
+        Text("Burned: $burned kcal", style = MaterialTheme.typography.bodyMedium)
+        Text("Net: $net kcal", style = MaterialTheme.typography.bodyMedium)
     }
 }

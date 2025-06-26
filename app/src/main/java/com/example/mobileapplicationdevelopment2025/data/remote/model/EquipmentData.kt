@@ -1,7 +1,7 @@
 package com.example.mobileapplicationdevelopment2025.data.remote.model
 
-data class FoodDto(
+data class EquipmentData(
     val name: String,
-    val calories: Double,
+    val caloriesBurnedPerHour: Double,
     val imageUrl: String
 )

@@ -9,11 +9,10 @@ import javax.inject.Singleton
 class EquipmentRepository @Inject constructor(
     private val api: EquipmentApi
 ) {
-    suspend fun refresh(): List<EquipmentDto> {
-        return try {
+    suspend fun refresh(): List<EquipmentDto> =
+        try {
             api.fetchEquipment().results
         } catch (_: Exception) {
             emptyList()
         }
-    }
 }
