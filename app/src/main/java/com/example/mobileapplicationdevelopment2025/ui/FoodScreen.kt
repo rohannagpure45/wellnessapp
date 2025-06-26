@@ -25,14 +25,14 @@ fun FoodScreen(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        viewModel.searchFood("")        // initial load
+        viewModel.searchFood("apple")        // initial load with sample food
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(bottom = 16.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             OutlinedTextField(
@@ -42,7 +42,10 @@ fun FoodScreen(
                 modifier = Modifier.weight(1f)
             )
             Button(onClick = {
-                scope.launch { viewModel.searchFood(query) }
+                scope.launch { 
+                    val searchQuery = if (query.isBlank()) "apple" else query
+                    viewModel.searchFood(searchQuery) 
+                }
             }) {
                 Text("Search")
             }
@@ -51,13 +54,12 @@ fun FoodScreen(
         Text(
             text = "Food — Total: $total kcal",
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
 
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(foods) { food ->
                 FoodListItem(food = food) {

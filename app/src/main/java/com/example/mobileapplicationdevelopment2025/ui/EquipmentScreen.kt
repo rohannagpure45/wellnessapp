@@ -19,16 +19,15 @@ fun EquipmentScreen(
     val equipment by viewModel.equipment.collectAsState()
     val burned by viewModel.burned.collectAsState()
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
         Text(
             text = "Equipment — Burned: $burned kcal",
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(bottom = 16.dp)
         )
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp)
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(equipment) { item ->
                 EquipmentListItem(item = item) {

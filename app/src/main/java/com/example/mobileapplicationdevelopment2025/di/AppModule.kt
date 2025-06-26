@@ -24,6 +24,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideEquipmentRepository(api: EquipmentApi): EquipmentRepository =
-        EquipmentRepository(api)
+    fun provideEquipmentRepository(
+        api: EquipmentApi,
+        imageApi: ImageApi
+    ): EquipmentRepository = EquipmentRepository(api, imageApi)
 }
