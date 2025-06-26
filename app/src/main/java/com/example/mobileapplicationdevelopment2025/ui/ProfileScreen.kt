@@ -1,35 +1,40 @@
-
 package com.example.mobileapplicationdevelopment2025.ui
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.mobileapplicationdevelopment2025.data.CalorieTracker
-import kotlinx.coroutines.flow.combine
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mobileapplicationdevelopment2025.viewmodel.EquipmentViewModel
+import com.example.mobileapplicationdevelopment2025.viewmodel.FoodViewModel
 
 @Composable
-fun ProfileScreen() {
-    val consumed by CalorieTracker.consumed.collectAsState()
-    val burned   by CalorieTracker.burned.collectAsState()
-    val net by remember(consumed, burned) { mutableStateOf(consumed - burned) }
+fun ProfileScreen(
+    foodVm: FoodViewModel = hiltViewModel(),
+    eqVm: EquipmentViewModel = hiltViewModel()
+) {
+    val consumed by foodVm.totalKcal.collectAsState()
+    val burned  by eqVm.totalBurn.collectAsState()
+    val net     = consumed - burned
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Text("User Profile", style = MaterialTheme.typography.h4)
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Name: Rohan Nagpure")
-        Text("Email: nagpure.r@northeastern.edu")
-        Spacer(modifier = Modifier.height(10.dp))
-
-        Text("Consumed: ${consumed.toInt()} kcal", modifier = Modifier.padding(4.dp))
-        Text("Burned:   ${burned.toInt()} kcal", modifier = Modifier.padding(4.dp))
-        Text("Net:      ${net.toInt()} kcal", modifier = Modifier.padding(4.dp))
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text("User Profile", style = MaterialTheme.typography.headlineMedium)
+            Spacer(Modifier.height(16.dp))
+            Text("Name: Rohan Nagpure")
+            Text("Email: nagpure.r@northeastern.edu")
+            Spacer(Modifier.height(24.dp))
+            Text("Consumed: $consumed kcal")
+            Text("Burned:   $burned kcal")
+            Text("Net:      $net kcal")
+        }
     }
 }

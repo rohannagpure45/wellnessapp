@@ -1,78 +1,51 @@
 package com.example.mobileapplicationdevelopment2025.viewmodel
 
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import com.example.mobileapplicationdevelopment2025.R
-import com.example.mobileapplicationdevelopment2025.data.Equipment
+import androidx.lifecycle.viewModelScope
+import com.example.mobileapplicationdevelopment2025.data.remote.model.EquipmentDto
+import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlin.math.max
+import javax.inject.Inject
 
-class EquipmentViewModel : ViewModel() {
-    private val _equipment = MutableStateFlow(getInitialEquipment())
-    val equipment: StateFlow<List<Equipment>> = _equipment.asStateFlow()
+@HiltViewModel
+class EquipmentViewModel @Inject constructor(
+    private val repo: EquipmentRepository
+) : ViewModel() {
 
-    private fun getInitialEquipment(): List<Equipment> {
-        return listOf(
-            Equipment(
-                id = 1,
-                name = "Treadmill",
-                category = "Cardio",
-                description = "Electric treadmill for running and walking",
-                imageRes = R.drawable.ic_treadmill
-            ),
-            Equipment(
-                id = 2,
-                name = "Dumbbells",
-                category = "Strength",
-                description = "Set of adjustable dumbbells",
-                imageRes = R.drawable.ic_dumbbells
-            ),
-            Equipment(
-                id = 3,
-                name = "Exercise Bike",
-                category = "Cardio",
-                description = "Stationary exercise bike",
-                imageRes = R.drawable.ic_bike
-            ),
-            Equipment(
-                id = 4,
-                name = "Barbell",
-                category = "Strength",
-                description = "Olympic barbell with weight plates",
-                imageRes = R.drawable.ic_barbell
-            ),
-            Equipment(
-                id = 5,
-                name = "Yoga Mat",
-                category = "Flexibility",
-                description = "Non-slip yoga and exercise mat",
-                imageRes = R.drawable.ic_yoga_mat
-            ),
-            Equipment(
-                id = 6,
-                name = "Bench Press",
-                category = "Strength",
-                description = "Adjustable weight bench",
-                imageRes = R.drawable.ic_bench
-            )
-        )
+    private val _items = MutableStateFlow<List<EquipmentDto>>(emptyList())
+    val items: StateFlow<List<EquipmentDto>> = _items.asStateFlow()
+
+    private val _added = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val added: StateFlow<Map<String, Int>> = _added.asStateFlow()
+
+    val totalBurn: StateFlow<Int> = combine(_items, _added) { list, counts ->
+        list.sumOf { eq ->
+            val c = counts[eq.name] ?: 0
+            (eq.caloriesBurnedPerHour * c).toInt()
+        }
     }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    fun addEquipment(equipment: Equipment) {
-        val currentList = _equipment.value.toMutableList()
-        val index = currentList.indexOfFirst { it.id == equipment.id }
-        if (index != -1) {
-            currentList[index] = equipment.copy(addedCount = equipment.addedCount + 1)
-            _equipment.value = currentList
+    init {
+        viewModelScope.launch {
+            _items.value = repo.refresh()
         }
     }
 
-    fun removeEquipment(equipment: Equipment) {
-        val currentList = _equipment.value.toMutableList()
-        val index = currentList.indexOfFirst { it.id == equipment.id }
-        if (index != -1 && equipment.addedCount > 0) {
-            currentList[index] = equipment.copy(addedCount = equipment.addedCount - 1)
-            _equipment.value = currentList
+    fun add(name: String) {
+        _added.update { m ->
+            val c = m[name] ?: 0
+            m + (name to (c + 1))
+        }
+    }
+
+    fun remove(name: String) {
+        _added.update { m ->
+            val c = m[name] ?: 0
+            m + (name to max(0, c - 1))
         }
     }
 }

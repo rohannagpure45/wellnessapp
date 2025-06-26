@@ -1,123 +1,75 @@
 package com.example.mobileapplicationdevelopment2025.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.mobileapplicationdevelopment2025.R
-import com.example.mobileapplicationdevelopment2025.data.Equipment
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
+import com.bumptech.glide.integration.compose.GlideImage
 import com.example.mobileapplicationdevelopment2025.viewmodel.EquipmentViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
-fun EquipmentScreen(viewModel: EquipmentViewModel = viewModel()) {
-    val equipment by viewModel.equipment.collectAsState()
+fun EquipmentScreen(viewModel: EquipmentViewModel = hiltViewModel()) {
+    val items by viewModel.items.collectAsState()
+    val added by viewModel.added.collectAsState()
+    val totalBurn by viewModel.totalBurn.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "Equipment",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
-
-        LazyColumn {
-            items(equipment) { item ->
-                EquipmentCard(
-                    equipment = item,
-                    onAddClick = { viewModel.addEquipment(item) },
-                    onRemoveClick = { viewModel.removeEquipment(item) }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun EquipmentCard(
-    equipment: Equipment,
-    onAddClick: () -> Unit,
-    onRemoveClick: () -> Unit
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+    Scaffold(topBar = {
+        TopAppBar(title = { Text("Equipment — Burned: $totalBurn kcal") })
+    }) { padding ->
+        LazyColumn(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
         ) {
-            Image(
-                painter = painterResource(id = equipment.imageRes),
-                contentDescription = equipment.name,
-                modifier = Modifier.size(60.dp),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = equipment.name,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = equipment.category,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = equipment.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                Text(
-                    text = "Added: ${equipment.addedCount}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-
-                Row {
-                    Button(
-                        onClick = onRemoveClick,
-                        modifier = Modifier.size(40.dp),
-                        contentPadding = PaddingValues(0.dp)
+            items(items) { eq ->
+                Card(
+                    elevation = CardDefaults.cardElevation(4.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                ) {
+                    Row(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("-")
-                    }
-
-                    Spacer(modifier = Modifier.width(8.dp))
-
-                    Button(
-                        onClick = onAddClick,
-                        modifier = Modifier.size(40.dp),
-                        contentPadding = PaddingValues(0.dp)
-                    ) {
-                        Text("+")
+                        GlideImage(
+                            model = eq.imageUrl,
+                            contentDescription = eq.name,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(eq.name, style = MaterialTheme.typography.titleMedium)
+                            Text(eq.category, style = MaterialTheme.typography.bodySmall)
+                            Text(eq.description, style = MaterialTheme.typography.bodySmall)
+                            Text("Burn/hr: ${eq.caloriesBurnedPerHour}", style = MaterialTheme.typography.bodySmall)
+                        }
+                        Spacer(Modifier.width(8.dp))
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text("Added: ${added[eq.name] ?: 0}", style = MaterialTheme.typography.bodySmall)
+                            Row {
+                                IconButton(onClick = { viewModel.remove(eq.name) }) {
+                                    Icon(Icons.Default.Remove, contentDescription = null)
+                                }
+                                IconButton(onClick = { viewModel.add(eq.name) }) {
+                                    Icon(Icons.Default.Add, contentDescription = null)
+                                }
+                            }
+                        }
                     }
                 }
             }
