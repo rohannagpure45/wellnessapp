@@ -59,6 +59,8 @@ kapt { correctErrorTypes = true }
 
 dependencies {
 
+    implementation(libs.androidx.hilt.common)
+    implementation(libs.androidx.hilt.work)
     /* ---------- Compose BOM ---------- */
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
@@ -69,6 +71,7 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("io.coil-kt:coil-compose:2.2.2")
 
     /* ---------- Jetpack Compose UI ---------- */
     implementation("androidx.compose.ui:ui")
@@ -79,6 +82,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
     debugImplementation("androidx.compose.ui:ui-tooling")
+    implementation("androidx.compose.material3:material3:1.2.1")
+
 
     /* ---------- Navigation ---------- */
     implementation("androidx.navigation:navigation-compose:2.8.5")
@@ -110,6 +115,7 @@ dependencies {
     /* ---------- Glide (classic + Compose) ---------- */
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("com.github.bumptech.glide:compose:1.0.0-beta01")
+    kapt("com.github.bumptech.glide:compiler:4.16.0")
 
     /* ---------- Hilt (DI) ---------- */
     implementation("com.google.dagger:hilt-android:2.51")

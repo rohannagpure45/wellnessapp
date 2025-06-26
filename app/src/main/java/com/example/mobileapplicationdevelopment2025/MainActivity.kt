@@ -5,74 +5,72 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.work.*
 import com.example.mobileapplicationdevelopment2025.ui.*
 import com.example.mobileapplicationdevelopment2025.ui.components.BottomBar
-import com.example.mobileapplicationdevelopment2025.work.RefreshDataWorker
+import com.example.mobileapplicationdevelopment2025.work.RefreshWorker
 import dagger.hilt.android.AndroidEntryPoint
-import java.util.concurrent.TimeUnit
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        scheduleDailyRefresh()
-
         setContent {
-            val navController: NavHostController = rememberNavController()
-            val backStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = backStackEntry?.destination?.route
+            var authed by remember { mutableStateOf(false) }
+            val rootNav = rememberNavController()
 
-            Scaffold(
-                bottomBar = {
-                    if (currentRoute in listOf("food", "equipment", "profile")) {
-                        BottomBar(navController)
-                    }
+            val req = PeriodicWorkRequestBuilder<RefreshWorker>(12, java.util.concurrent.TimeUnit.HOURS)
+                .setConstraints(
+                    Constraints.Builder()
+                        .setRequiredNetworkType(NetworkType.UNMETERED)
+                        .setRequiresBatteryNotLow(true)
+                        .build()
+                )
+                .build()
+
+            WorkManager.getInstance(this)
+                .enqueueUniquePeriodicWork("refresh", ExistingPeriodicWorkPolicy.KEEP, req)
+            NavHost(
+                navController = rootNav,
+                startDestination = if (authed) "main" else "login"
+            ) {
+                composable("login") {
+                    LoginScreen(
+                        onSuccess = { authed = true ; rootNav.navigate("main") { popUpTo("login") { inclusive = true } } }
+                    )
                 }
-            ) { innerPadding ->
-                NavHost(
-                    navController = navController,
-                    startDestination = "login",
-                    modifier = Modifier.padding(innerPadding)
-                ) {
-                    composable("login")     { LoginScreen(navController) }
-                    composable("food")      { FoodScreen() }
-                    composable("equipment") { EquipmentScreen() }
-                    composable("profile")   { ProfileScreen(navController) }
-                    composable("detail") {
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.get<com.example.mobileapplicationdevelopment2025.data.WellnessItem>("item")
-                            ?.let { DetailScreen(it) }
+
+                composable("main") {
+                    val tabNav = rememberNavController()
+                    val showBar by derivedStateOf {
+                        tabNav.currentDestination?.route in listOf("food","equipment","profile")
+                    }
+                    Scaffold(
+                        bottomBar = { if (showBar) BottomBar(tabNav) }
+                    ) { inner ->
+                        NavHost(
+                            navController = tabNav,
+                            startDestination = "food",
+                            modifier = Modifier.padding(inner)
+                        ) {
+                            composable("food")      { FoodScreen() }
+                            composable("equipment") { EquipmentScreen() }
+                            composable("profile")   { ProfileScreen() }
+                        }
                     }
                 }
             }
         }
-    }
-
-    private fun scheduleDailyRefresh() {
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.UNMETERED)
-            .setRequiresBatteryNotLow(true)
-            .build()
-
-        val request = PeriodicWorkRequestBuilder<RefreshDataWorker>(1, TimeUnit.DAYS)
-            .setConstraints(constraints)
-            .build()
-
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-            "RefreshDataWork",
-            ExistingPeriodicWorkPolicy.KEEP,
-            request
-        )
     }
 }
