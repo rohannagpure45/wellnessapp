@@ -10,6 +10,7 @@ import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
@@ -33,6 +34,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
+    @Named("MainRetrofit")
     fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
             .baseUrl(BASE_URL)
@@ -42,16 +44,7 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideFoodApi(retrofit: Retrofit): FoodApiService =
-        retrofit.create(FoodApiService::class.java)
-
-    @Provides
-    @Singleton
-    fun provideEquipmentApi(retrofit: Retrofit): EquipmentApi =
-        retrofit.create(EquipmentApi::class.java)
-
-    @Provides
-    @Singleton
+    @Named("UnsplashRetrofit")
     fun provideUnsplashRetrofit(): Retrofit =
         Retrofit.Builder()
             .baseUrl("https://api.unsplash.com/")
@@ -60,6 +53,16 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideImageApi(unsplashRetrofit: Retrofit): com.example.mobileapplicationdevelopment2025.data.remote.ImageApi =
+    fun provideFoodApi(@Named("MainRetrofit") retrofit: Retrofit): FoodApiService =
+        retrofit.create(FoodApiService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideEquipmentApi(@Named("MainRetrofit") retrofit: Retrofit): EquipmentApi =
+        retrofit.create(EquipmentApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideImageApi(@Named("UnsplashRetrofit") unsplashRetrofit: Retrofit): com.example.mobileapplicationdevelopment2025.data.remote.ImageApi =
         unsplashRetrofit.create(com.example.mobileapplicationdevelopment2025.data.remote.ImageApi::class.java)
 }
