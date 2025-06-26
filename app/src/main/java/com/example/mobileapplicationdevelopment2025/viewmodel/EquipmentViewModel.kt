@@ -5,11 +5,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import com.example.mobileapplicationdevelopment2025.data.remote.model.EquipmentDto
 import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
 import com.example.mobileapplicationdevelopment2025.session.SessionManager
 import javax.inject.Inject
+import kotlin.math.roundToInt
 
 @HiltViewModel
 class EquipmentViewModel @Inject constructor(
@@ -22,6 +24,10 @@ class EquipmentViewModel @Inject constructor(
 
     private val _burned = MutableStateFlow(0)
     val burned: StateFlow<Int> get() = _burned
+    
+    // Current exercise time settings
+    val exerciseTimeMinutes: StateFlow<Int> = sessionManager.exerciseTimeMinutes
+    val exerciseTimeMultiplier: StateFlow<Float> = sessionManager.exerciseTimeMultiplier
 
     init {
         viewModelScope.launch {
@@ -30,8 +36,13 @@ class EquipmentViewModel @Inject constructor(
     }
 
     fun addEquipment(item: EquipmentDto) {
-        val b = item.caloriesBurnedPerHour.toInt()
-        sessionManager.addBurned(b)
-        _burned.value += b
+        viewModelScope.launch {
+            // Calculate actual calories burned based on exercise time
+            val multiplier = sessionManager.exerciseTimeMultiplier.value
+            val actualCaloriesBurned = (item.caloriesBurnedPerHour * multiplier).roundToInt()
+            
+            sessionManager.addBurned(actualCaloriesBurned)
+            _burned.value += actualCaloriesBurned
+        }
     }
 }

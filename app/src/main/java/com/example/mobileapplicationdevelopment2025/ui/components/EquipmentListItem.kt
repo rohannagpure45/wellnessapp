@@ -14,12 +14,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.mobileapplicationdevelopment2025.viewmodel.EquipmentViewModel
+import kotlin.math.roundToInt
 
 @Composable
 fun EquipmentListItem(
     item: EquipmentDto,
     onAdd: () -> Unit
 ) {
+    // Get current exercise time settings to show actual calorie burn
+    val equipmentViewModel: EquipmentViewModel = hiltViewModel()
+    val exerciseTimeMultiplier by equipmentViewModel.exerciseTimeMultiplier.collectAsState()
+    val exerciseTimeMinutes by equipmentViewModel.exerciseTimeMinutes.collectAsState()
+    
+    val actualCaloriesBurned = (item.caloriesBurnedPerHour * exerciseTimeMultiplier).roundToInt()
+    
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -49,9 +61,15 @@ fun EquipmentListItem(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "Burn: ${item.caloriesBurnedPerHour.toInt()} kcal/h",
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = "${item.caloriesBurnedPerHour.toInt()} kcal/h",
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "$actualCaloriesBurned kcal ($exerciseTimeMinutes min)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = androidx.compose.ui.text.font.FontWeight.Medium
                 )
             }
             IconButton(
