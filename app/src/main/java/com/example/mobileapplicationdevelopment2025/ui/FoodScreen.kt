@@ -4,22 +4,25 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import com.example.mobileapplicationdevelopment2025.viewmodel.FoodViewModel
 import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalGlideComposeApi::class)
 @Composable
 fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
-    val foods by viewModel.foods.collectAsState()
+    val results by viewModel.searchResults.collectAsState()
+    val total   by viewModel.totalKcal.collectAsState()
     val snackHost = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var query by remember { mutableStateOf("") }
@@ -28,7 +31,7 @@ fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
         snackbarHost = { SnackbarHost(snackHost) },
         topBar = {
             TopAppBar(
-                title = { Text("Food") },
+                title = { Text("Food — Total: $total kcal") },
                 actions = {
                     IconButton(onClick = { viewModel.refresh() }) {
                         Icon(Icons.Default.Refresh, contentDescription = null)
@@ -38,12 +41,12 @@ fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
         }
     ) { padding ->
         Column(
-            modifier = Modifier
+            Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
             Row(
-                modifier = Modifier
+                Modifier
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
@@ -67,8 +70,8 @@ fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
                 }
             }
             Divider()
-            LazyColumn {
-                if (foods.isEmpty()) {
+            LazyColumn(Modifier.fillMaxSize()) {
+                if (results.isEmpty()) {
                     item {
                         Text(
                             "No items—try a different search or pull to refresh.",
@@ -79,11 +82,12 @@ fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
                         )
                     }
                 }
-                items(foods) { item ->
+                items(results) { item ->
                     Row(
-                        modifier = Modifier
+                        Modifier
                             .fillMaxWidth()
-                            .padding(12.dp)
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         GlideImage(
                             model = "https://source.unsplash.com/100x100/?${item.name}",
@@ -91,9 +95,17 @@ fun FoodScreen(viewModel: FoodViewModel = hiltViewModel()) {
                             modifier = Modifier.size(64.dp)
                         )
                         Spacer(Modifier.width(12.dp))
-                        Column {
+                        Column(Modifier.weight(1f)) {
                             Text(item.name, style = MaterialTheme.typography.titleMedium)
-                            Text("Calories ${item.calories}")
+                            Text("Calories ${item.calories}", style = MaterialTheme.typography.bodySmall)
+                        }
+                        IconButton(onClick = {
+                            viewModel.addFood(item)
+                            scope.launch {
+                                snackHost.showSnackbar("Added ${item.name}")
+                            }
+                        }) {
+                            Icon(Icons.Default.Add, contentDescription = null)
                         }
                     }
                     Divider()

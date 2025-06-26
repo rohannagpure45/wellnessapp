@@ -1,51 +1,52 @@
 package com.example.mobileapplicationdevelopment2025.di
 
-import com.example.mobileapplicationdevelopment2025.data.remote.*
+import com.example.mobileapplicationdevelopment2025.data.remote.FoodApiService
+import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-import javax.inject.Named
 import javax.inject.Singleton
-
-private const val CALORIES = "calories"
-private const val UNSPLASH = "unsplash"
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    @Singleton @Provides
-    fun ok() = OkHttpClient.Builder().build()
+    private const val BASE_URL = "https://api.calorieninjas.com/v1/"
+    private const val API_KEY  = "ggC/uB7RrxJHXRPAY5Flpg==Mhj07mvygaRs8pRe"
 
-    @Singleton @Provides @Named(CALORIES)
-    fun calorieRetrofit(ok: OkHttpClient): Retrofit =
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(Interceptor { chain ->
+                val req = chain.request().newBuilder()
+                    .addHeader("X-Api-Key", API_KEY)
+                    .build()
+                chain.proceed(req)
+            })
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit =
         Retrofit.Builder()
-            .baseUrl("https://api.calorieninjas.com/v1/")
-            .client(ok)
+            .baseUrl(BASE_URL)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
 
-    @Singleton @Provides @Named(UNSPLASH)
-    fun unsplashRetrofit(ok: OkHttpClient): Retrofit =
-        Retrofit.Builder()
-            .baseUrl("https://api.unsplash.com/")
-            .client(ok)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
+    @Provides
+    @Singleton
+    fun provideFoodApi(retrofit: Retrofit): FoodApiService =
+        retrofit.create(FoodApiService::class.java)
 
-    @Singleton @Provides
-    fun provideFoodApi(@Named(CALORIES) r: Retrofit): FoodApiService =
-        r.create(FoodApiService::class.java)
-
-    @Singleton @Provides
-    fun provideEquipmentApi(@Named(CALORIES) r: Retrofit): EquipmentApi =
-        r.create(EquipmentApi::class.java)
-
-    @Singleton @Provides
-    fun provideImageApi(@Named(UNSPLASH) r: Retrofit): ImageApi =
-        r.create(ImageApi::class.java)
+    @Provides
+    @Singleton
+    fun provideEquipmentApi(retrofit: Retrofit): EquipmentApi =
+        retrofit.create(EquipmentApi::class.java)
 }

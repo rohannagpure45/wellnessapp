@@ -1,6 +1,5 @@
 package com.example.mobileapplicationdevelopment2025.di
 
-import com.example.mobileapplicationdevelopment2025.data.local.FoodDao
 import com.example.mobileapplicationdevelopment2025.data.remote.EquipmentApi
 import com.example.mobileapplicationdevelopment2025.data.remote.FoodApiService
 import com.example.mobileapplicationdevelopment2025.data.remote.repository.EquipmentRepository
@@ -18,9 +17,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideFoodRepository(
-        api: FoodApiService,
-        dao: FoodDao
-    ): FoodRepository = FoodRepository(api, dao)
+        api: FoodApiService
+    ): FoodRepository = FoodRepository(api)
 
     @Provides
     @Singleton
