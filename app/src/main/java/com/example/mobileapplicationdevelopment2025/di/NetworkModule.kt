@@ -49,4 +49,17 @@ object NetworkModule {
     @Singleton
     fun provideEquipmentApi(retrofit: Retrofit): EquipmentApi =
         retrofit.create(EquipmentApi::class.java)
+
+    @Provides
+    @Singleton
+    fun provideUnsplashRetrofit(): Retrofit =
+        Retrofit.Builder()
+            .baseUrl("https://api.unsplash.com/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideImageApi(unsplashRetrofit: Retrofit): com.example.mobileapplicationdevelopment2025.data.remote.ImageApi =
+        unsplashRetrofit.create(com.example.mobileapplicationdevelopment2025.data.remote.ImageApi::class.java)
 }
